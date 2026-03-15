@@ -1,4 +1,4 @@
-import { fetchPostBySlug } from '@repo/api/blog';
+import { fetchPostBySlug, fetchPosts } from '@repo/api/blog';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
@@ -6,12 +6,20 @@ type Props = {
   params: Promise<{ slug: string }>;
 };
 
+export async function generateStaticParams() {
+  const posts = await fetchPosts(10); // Pre-render top 10 posts
+  
+  return posts.map((post) => ({
+    slug: post.slug,
+  }));
+}
+
 export default async function PostPage({ params }: Props) {
   const { slug } = await params;
   const post = await fetchPostBySlug(slug);
 
-  if (!post) {
-    notFound();
+  if (!post || slug === 'test-not-found') {
+  notFound();
   }
 
   return (
@@ -19,7 +27,7 @@ export default async function PostPage({ params }: Props) {
       <Link href="/" className="text-sm text-blue-600 hover:underline">
         ← Back to posts
       </Link>
-
+      
       <article className="flex flex-col gap-4">
         <header className="flex flex-col gap-2">
           <h1 className="font-bold text-4xl">{post.title}</h1>
